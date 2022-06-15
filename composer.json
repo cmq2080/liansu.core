@@ -1,6 +1,6 @@
 {
     "name": "liansu/core",
-    "description": "The liansu Framework.",
+    "description": "The Liansu Framework.",
     "keywords": [
         "framework",
         "liansu"
@@ -17,7 +17,7 @@
     },
     "autoload": {
         "psr-4": {
-            "liansu\\core": "./src"
+            "liansu\\core\\": "src/"
         }
     }
 }

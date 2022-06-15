@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 描述：
  * Created at 2021/8/22 16:58 by mq
@@ -6,10 +7,7 @@
 
 namespace liansu\core;
 
-
-use liansu\core\interface_set\InitInterface;
-
-class Argument implements InitInterface
+class Argument
 {
     private static $data = [];
 
@@ -22,48 +20,42 @@ class Argument implements InitInterface
         // TODO: Implement initialize() method.
         global $argv;
 
-        for ($i = 0; $i < count($argv); $i++) {
-            $arg = $argv[$i];
-            $key = $value = null;
-//            if ($i === 0) {
-            /*
-             * --api --app
+        if ($argv) {
+            for ($i = 0; $i < count($argv); $i++) {
+                $arg = $argv[$i];
+                $key = $value = null;
+                /*
+             * --api --app // 长参数
              * --api 1
-             * -app 1
-             * --api=1
-             * -api=1
-             *
+             * -app 1 // 短参数
+             * --api=1 // 长联值参数
+             * -api=1 // 短联值参数
              */
-//            }
-            if (strpos($arg, '--') === 0) { // 变长参数为短参数
-                $arg = substr($arg, 1);
-            }
+                //            }
+                if (strpos($arg, '--') === 0) { // 变长参数为短参数
+                    $arg = substr($arg, 1);
+                }
 
-            if (self::isArgument($arg) === true) {
-                if (self::isLongArgument($arg) === true) {
-                    $key = substr($arg, 2);
-                } else if (self::isShortArgument($arg) === true) {
+                if (self::isArgument($arg) === true) { // 找键
                     $key = substr($arg, 1);
-                }
 
-                if (isset($argv[$i + 1]) === false) {
-                    $value = true;
-                } else if (self::isArgument($argv[$i + 1]) === true) {
-                    $value = true;
+                    if (isset($argv[$i + 1]) === false) { // 下一个：没啦，值默认为true
+                        $value = true;
+                    } else if (self::isArgument($argv[$i + 1]) === true) { // 下一个：也是键，值默认为true
+                        $value = true;
+                    } else {
+                        $value = $argv[$i + 1];
+                        $i++;
+                    }
+                } else if (self::isArgumentWithValue($arg)) {
+                    preg_match('/^\-([0-9A-Za-z_-]+)=(\S+)$/is', $arg, $matches);
+                    $key = $matches[1];
+                    $value = $matches[2];
                 } else {
-                    $value = $argv[$i + 1];
-                    $i++;
+                    continue;
                 }
-            } else if (self::isArgumentWithValue($arg)) {
-                preg_match('/^\-([0-9A-Za-z_-]+)=(\S+)$/is', $arg, $matches);
-                $key = $matches[1];
-                $value = $matches[2];
-            } else {
-                continue;
+                self::$data[$key] = $value;
             }
-            self::$data[$key] = $value;
-
-            continue;
         }
     }
 
@@ -93,54 +85,10 @@ class Argument implements InitInterface
 
     private static function isArgument($arg)
     {
-        return self::isShortArgument($arg);
-    }
-
-    /**
-     * 功能：
-     * Created at 2021/8/22 16:35 by mq
-     * @param $arg
-     * @return bool
-     */
-    private static function isLongArgument($arg)
-    {
-        return boolval(preg_match('/^\-\-[0-9A-Za-z_-]+$/is', $arg));
-    }
-
-    /**
-     * 功能：
-     * Created at 2021/8/22 16:35 by mq
-     * @param $arg
-     * @return bool
-     */
-    private static function isShortArgument($arg)
-    {
         return boolval(preg_match('/^\-[0-9A-Za-z_-]+$/is', $arg));
     }
 
     private static function isArgumentWithValue($arg)
-    {
-        return self::isShortArgumentWithValue($arg);
-    }
-
-    /**
-     * 功能：
-     * Created at 2021/8/22 16:35 by mq
-     * @param $arg
-     * @return bool
-     */
-    private static function isLongArgumentWithValue($arg)
-    {
-        return boolval(preg_match('/^\-\-([0-9A-Za-z_-]+)=([0-9A-Za-z_-]+)$/is', $arg));
-    }
-
-    /**
-     * 功能：
-     * Created at 2021/8/22 16:35 by mq
-     * @param $arg
-     * @return bool
-     */
-    private static function isShortArgumentWithValue($arg)
     {
         return boolval(preg_match('/^\-([0-9A-Za-z_-]+)=(\S+)$/is', $arg));
     }

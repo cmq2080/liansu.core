@@ -8,9 +8,7 @@
 namespace liansu\core;
 
 
-use liansu\core\interface_set\InitInterface;
-
-class Config implements InitInterface
+class Config
 {
     private static $configFiles = [];
     private static $data = [];
@@ -18,31 +16,31 @@ class Config implements InitInterface
     // TODO: Implement initialize() method.
     public static function initialize()
     {
-//        // 先加载主配置（app.php）文件
-//        if (is_file(CONFIG_DIRECTORY . '/app.php') === true) {
-//            self::$data = require_once CONFIG_DIRECTORY . '/app.php';
-//        }
-//
-//        // 再依次加载辅配置文件（辅配置级别低一级）
-//        foreach (scandir(CONFIG_DIRECTORY) as $file) {
-//            if ($file === '.' || $file === '..' || $file === 'app.php' || is_file(CONFIG_DIRECTORY . '/' . $file) === false) { // 不是文件，算了
-//                continue;
-//            }
-//            if (pathinfo($file, PATHINFO_EXTENSION) !== 'php') { // 还必须得是php文件
-//                continue;
-//            }
-//
-//            $key = pathinfo($file, PATHINFO_FILENAME);
-//            self::$data[$key] = require_once CONFIG_DIRECTORY . '/' . $file; // 有与主配置冲突的地方，直接覆盖
-//
-//            //            // app.php文件作主配置
-//            //            if (pathinfo($file, PATHINFO_BASENAME) === 'app.php') {
-//            //                self::$vars = require_once CONFIG_DIRECTORY . '/' . $file;
-//            //            } else { // 其它文件做辅配置，级别低一级
-//            //                $key = pathinfo($file, PATHINFO_FILENAME);
-//            //                self::$vars[$key] = require_once CONFIG_DIRECTORY . '/' . $file;
-//            //            }
-//        }
+        //        // 先加载主配置（app.php）文件
+        //        if (is_file(CONFIG_DIRECTORY . '/app.php') === true) {
+        //            self::$data = require_once CONFIG_DIRECTORY . '/app.php';
+        //        }
+        //
+        //        // 再依次加载辅配置文件（辅配置级别低一级）
+        //        foreach (scandir(CONFIG_DIRECTORY) as $file) {
+        //            if ($file === '.' || $file === '..' || $file === 'app.php' || is_file(CONFIG_DIRECTORY . '/' . $file) === false) { // 不是文件，算了
+        //                continue;
+        //            }
+        //            if (pathinfo($file, PATHINFO_EXTENSION) !== 'php') { // 还必须得是php文件
+        //                continue;
+        //            }
+        //
+        //            $key = pathinfo($file, PATHINFO_FILENAME);
+        //            self::$data[$key] = require_once CONFIG_DIRECTORY . '/' . $file; // 有与主配置冲突的地方，直接覆盖
+        //
+        //            //            // app.php文件作主配置
+        //            //            if (pathinfo($file, PATHINFO_BASENAME) === 'app.php') {
+        //            //                self::$vars = require_once CONFIG_DIRECTORY . '/' . $file;
+        //            //            } else { // 其它文件做辅配置，级别低一级
+        //            //                $key = pathinfo($file, PATHINFO_FILENAME);
+        //            //                self::$vars[$key] = require_once CONFIG_DIRECTORY . '/' . $file;
+        //            //            }
+        //        }
         foreach (self::$configFiles as $configFile) {
             $arr = require $configFile;
             if (is_array($arr) === false) {

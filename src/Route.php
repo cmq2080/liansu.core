@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 描述：
  * Created at 2021/6/6 22:48 by mq
@@ -7,9 +8,7 @@
 namespace liansu\core;
 
 
-use liansu\core\interface_set\InitInterface;
-
-class Route implements InitInterface
+class Route
 {
     private static $data = [];
     private static $runnerDesc = 'controller';
@@ -42,9 +41,9 @@ class Route implements InitInterface
         if (class_exists($controller) === false) {
             throw new \Exception(self::$runnerDesc . '不存在：' . $controller);
         }
-//        if (($controller instanceof Controller) === false) {
-//            throw new \Exception('controller必须是liansu\类的子类：' . $controller);
-//        }
+        //        if (($controller instanceof Controller) === false) {
+        //            throw new \Exception('controller必须是liansu\类的子类：' . $controller);
+        //        }
 
         $class = new \ReflectionClass($controller);
         if ($class->hasMethod($action) === false) { // 通过反射类来查找action的有无，我当时有点猛~~~
