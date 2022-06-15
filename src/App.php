@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 描述：
  * Created at 2021/5/30 21:24 by mq
@@ -7,27 +8,26 @@
 namespace liansu\core;
 
 
-use liansu\core\interface_set\RunInterface;
+use liansu\core\interface_\RunInterface;
 
 class App implements RunInterface
 {
-    private static $instance = null;
-    private $routeParam = 'api';
-    private $baseNamespace = '';
-    private $initItems = [
-        'liansu/core/Config',
-        'liansu/core/Request',
-        'liansu/core/Route',
+    protected static $instance = null;
+    
+    protected $routeParam = 'r';
+    protected $baseNamespace = '';
+    protected $initItems = [
+        '\\liansu\\core\\init\\Index',
     ];
 
-    private $configFiles = [];
-    private $tmpConfigs = [];
+    protected $configFiles = [];
+    protected $tmpConfigs = [];
 
-    private $defaultApp = '';
-    private $defaultAction = '';
+    protected $defaultApp = '';
+    protected $defaultAction = '';
 
-    private $_runner = '';
-    private $_action = '';
+    protected $_runner = '';
+    protected $_action = '';
 
     public static function instance($configFile = null)
     {
@@ -46,21 +46,22 @@ class App implements RunInterface
         return self::$instance;
     }
 
-    private function __construct()
+    protected function __construct()
     {
         // 定义常量们
         defined('PUBLIC_DIRECTORY') || define('PUBLIC_DIRECTORY', realpath($_SERVER['DOCUMENT_ROOT']));
-        defined('ROOT_DIRECTORY') || define('ROOT_DIRECTORY', realpath(PUBLIC_DIRECTORY . '/..'));
-//        defined('CONFIG_DIRECTORY') || define('CONFIG_DIRECTORY', realpath(ROOT_DIRECTORY . '/config'));
-        defined('VENDOR_DIRECTORY') || define('VENDOR_DIRECTORY', realpath(ROOT_DIRECTORY . '/vendor'));
-        defined('RUNTIME_DIRECTORY') || define('RUNTIME_DIRECTORY', realpath(ROOT_DIRECTORY . '/runtime'));
-
-        // 初始化各个类
-        $this->runInitItems();
+        defined('ROOT_DIRECTORY') || define('ROOT_DIRECTORY', realpath(PUBLIC_DIRECTORY . DIRECTORY_SEPARATOR . '..'));
+        //        defined('CONFIG_DIRECTORY') || define('CONFIG_DIRECTORY', realpath(ROOT_DIRECTORY . '/config'));
+        defined('VENDOR_DIRECTORY') || define('VENDOR_DIRECTORY', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'vendor'));
+        defined('RUNTIME_DIRECTORY') || define('RUNTIME_DIRECTORY', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'runtime'));
     }
 
     public function run()
     {
+        // 运行之前要做的事
+        $this->runInitItems();
+
+        /************开始运行************/
         // 接收参数
         $app = Request::all($this->routeParam);
         if (!$app) {
@@ -132,14 +133,14 @@ class App implements RunInterface
         }
     }
 
-    private function runInitItems()
+    protected function runInitItems()
     {
         foreach ($this->initItems as $initItem) {
             $initItem = str_replace('/', '\\', $initItem);
             if (class_exists($initItem) === false) {
                 throw new \Exception('初始化类不存在');
             }
-            $initItem::initialize();
+            (new $initItem())->run();
         }
     }
 
@@ -170,5 +171,4 @@ class App implements RunInterface
     {
         return $this->_action;
     }
-
 }

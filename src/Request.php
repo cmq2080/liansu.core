@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 描述：
  * Created at 2021/5/30 21:44 by mq
@@ -7,9 +8,7 @@
 namespace liansu\core;
 
 
-use liansu\core\interface_set\InitInterface;
-
-class Request implements InitInterface
+class Request
 {
     private static $args = [];
 
@@ -25,7 +24,7 @@ class Request implements InitInterface
         }
     }
 
-    private static function _get($method, $key = null, $default = '')
+    private static function _get($method, $key = null, $default = null)
     {
         if ($method === 'GET') {
             return $key === null ? $_GET : ($_GET[$key] ?? $default);
@@ -45,7 +44,7 @@ class Request implements InitInterface
     {
         // TODO: Implement __callStatic() method.
         if (in_array(strtoupper($name), ['GET', 'POST', 'ARGS', 'ALL']) === true) {
-            return self::_get(strtoupper($name), $arguments[0] ?? null, $arguments[1] ?? '');
+            return self::_get(strtoupper($name), $arguments[0] ?? null, $arguments[1] ?? null);
         }
 
         return null;
