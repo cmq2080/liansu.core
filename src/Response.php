@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 描述：
  * Created at 2021/5/30 21:45 by mq
@@ -18,7 +19,8 @@ class Response
 
     public static function json($stat, $msg = '', $data = [])
     {
-        exit(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
+        header('Content-Type:application/json;charset=utf-8');
+        self::printf(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
     }
 
     public static function success($msg = 'OK', $data = [])
@@ -31,9 +33,9 @@ class Response
         self::json($stat, $msg, $data);
     }
 
-//    public static function html($result, $charset = 'utf-8')
-//    {
-//        header('Content-Type:text/html;charset:' . $charset);
-//        self::printf($result);
-//    }
+    //    public static function html($result, $charset = 'utf-8')
+    //    {
+    //        header('Content-Type:text/html;charset:' . $charset);
+    //        self::printf($result);
+    //    }
 }

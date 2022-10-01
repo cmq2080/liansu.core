@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 描述：
  * Created at 2021/6/6 22:58 by mq
@@ -20,5 +21,15 @@ class Helper
         }
 
         return $object;
+    }
+
+    public static function url($runner, $action = null)
+    {
+        $paramName = App::instance()->getRouteParamName();
+        if (!$action) {
+            $action = App::instance()->getDefaultApp();
+        }
+        $url = '?' . $paramName . '=' . $runner . '@' . $action;
+        return $url;
     }
 }

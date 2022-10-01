@@ -7,7 +7,6 @@
 
 namespace liansu\core;
 
-
 class Request
 {
     private static $args = [];

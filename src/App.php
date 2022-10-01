@@ -13,11 +13,18 @@ use liansu\core\interface_\RunInterface;
 class App implements RunInterface
 {
     protected static $instance = null;
-    
-    protected $routeParam = 'r';
+
+    // 五大公有变量
+    public $rootDirectory = '';
+    public $publicDirectory = '';
+    public $vendorDirectory = '';
+    public $runtimeDirectory = '';
+
+    protected $routeParamName = 'r';
     protected $baseNamespace = '';
+    protected $namespacePool = [];
     protected $initItems = [
-        '\\liansu\\core\\init\\Index',
+        \liansu\core\init\Index::class,
     ];
 
     protected $configFiles = [];
@@ -48,18 +55,24 @@ class App implements RunInterface
 
     protected function __construct()
     {
-        // 定义常量们
-        defined('PUBLIC_DIRECTORY') || define('PUBLIC_DIRECTORY', realpath($_SERVER['DOCUMENT_ROOT']));
-        defined('ROOT_DIRECTORY') || define('ROOT_DIRECTORY', realpath(PUBLIC_DIRECTORY . DIRECTORY_SEPARATOR . '..'));
-        //        defined('CONFIG_DIRECTORY') || define('CONFIG_DIRECTORY', realpath(ROOT_DIRECTORY . '/config'));
-        defined('VENDOR_DIRECTORY') || define('VENDOR_DIRECTORY', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'vendor'));
-        defined('RUNTIME_DIRECTORY') || define('RUNTIME_DIRECTORY', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'runtime'));
+        // // 定义常量们
+        // defined('PUBLIC_DIRECTORY') || define('PUBLIC_DIRECTORY', realpath(PHP_SAPI === 'cli' ? __DIR__ . '/../../../../public' : $_SERVER['DOCUMENT_ROOT'])); // 如果是cli模式，怎么办？
+        // defined('ROOT_DIRECTORY') || define('ROOT_DIRECTORY', realpath(PUBLIC_DIRECTORY . DIRECTORY_SEPARATOR . '..'));
+        // //        defined('CONFIG_DIRECTORY') || define('CONFIG_DIRECTORY', realpath(ROOT_DIRECTORY . '/config'));
+        // defined('VENDOR_DIRECTORY') || define('VENDOR_DIRECTORY', ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'vendor');
+        // defined('RUNTIME_DIRECTORY') || define('RUNTIME_DIRECTORY', ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'runtime');
+
+        // 初始化变量们
+        $this->publicDirectory = realpath(PHP_SAPI === 'cli' ? __DIR__ . '/../../../../public' : $_SERVER['DOCUMENT_ROOT']);
+        $this->rootDirectory = realpath($this->publicDirectory . '/..');
+        $this->vendorDirectory = realpath($this->publicDirectory . '/vendor');
+        $this->runtimeDirectory = realpath($this->runtimeDirectory . '/runtime');
     }
 
     public function run()
     {
         // 运行之前要做的事
-        $this->runInitItems();
+        $this->beforeRun();
 
         /************开始运行************/
         // 接收参数
@@ -83,8 +96,18 @@ class App implements RunInterface
 
         // 解析路由
         $runner = Route::parseStr($app);
-        $runner = $this->baseNamespace . '\\' . $runner;
-        if (class_exists($runner) === false) {
+
+        $find = false;
+        foreach ($this->namespacePool as $namespace) {
+            $testRunner = $namespace . '\\' . $runner;
+            if (class_exists($runner)) {
+                $runner = $testRunner;
+                $find = true;
+                break;
+            }
+        }
+
+        if (!$find) {
             throw new \Exception('runner不存在：' . $runner);
         }
         $action = Route::parseStr($app, 'action');
@@ -102,13 +125,23 @@ class App implements RunInterface
         return $this;
     }
 
-    public function setRouteParam($routeParam)
+    public function getBaseNamespace()
     {
-        if ($routeParam) {
-            $this->routeParam = $routeParam;
+        return $this->baseNamespace;
+    }
+
+    public function setRouteParamName($routeParamName)
+    {
+        if ($routeParamName) {
+            $this->routeParamName = $routeParamName;
         }
 
         return $this;
+    }
+
+    public function getRouteParamName()
+    {
+        return $this->routeParamName;
     }
 
     public function setDefaultApp($app)
@@ -120,12 +153,17 @@ class App implements RunInterface
         return $this;
     }
 
+    public function getDefaultApp()
+    {
+        return $this->defaultApp;
+    }
+
     public function addInitItems(...$initItems)
     {
         foreach ($initItems as $initItem) {
             if (is_array($initItem) === true) {
                 foreach ($initItem as $item) {
-                    $this->initItems[] = $item;
+                    $this->addInitItems($item);
                 }
             } else {
                 $this->initItems[] = $initItem;
@@ -142,6 +180,17 @@ class App implements RunInterface
             }
             (new $initItem())->run();
         }
+    }
+
+    protected function addNamespace($namespace)
+    {
+        $this->namespacePool[] = $namespace;
+    }
+
+    protected function beforeRun()
+    {
+        $this->runInitItems();
+        array_unshift($this->namespacePool, $this->baseNamespace);
     }
 
     public function setRunner($runner)
