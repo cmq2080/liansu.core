@@ -25,13 +25,12 @@ class Argument
                 $arg = $argv[$i];
                 $key = $value = null;
                 /*
-             * --api --app // 长参数
-             * --api 1
-             * -app 1 // 短参数
-             * --api=1 // 长联值参数
-             * -api=1 // 短联值参数
-             */
-                //            }
+                 * --api --app // 长参数
+                 * --api 1
+                 * -app 1 // 短参数
+                 * --api=1 // 长联值参数
+                 * -api=1 // 短联值参数
+                 */
                 if (strpos($arg, '--') === 0) { // 变长参数为短参数
                     $arg = substr($arg, 1);
                 }

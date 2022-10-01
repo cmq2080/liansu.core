@@ -24,10 +24,13 @@ class Index implements RunInterface
             }
 
             $driver = '\\liansu\\core\\' . pathinfo($filepath, PATHINFO_FILENAME);
+            if (!class_exists($driver)) {
+                continue;
+            }
             $class = new \ReflectionClass($driver);
             if ($class->hasMethod('initialize') === true) {
                 $method = $class->getMethod('initialize');
-                if ($method->isStatic() === true) {
+                if ($method->isPublic() && $method->isStatic() === true) {
                     $driver::initialize();
                 }
             }
