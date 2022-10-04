@@ -17,8 +17,9 @@ class App implements RunInterface
     // 五大公有变量
     public $rootDirectory = '';
     public $publicDirectory = '';
-    public $vendorDirectory = '';
+    public $configDirectory = '';
     public $runtimeDirectory = '';
+    public $vendorDirectory = '';
 
     protected $routeParamName = 'r';
     protected $baseNamespace = '';
@@ -30,8 +31,8 @@ class App implements RunInterface
     protected $configFiles = [];
     protected $tmpConfigs = [];
 
-    protected $defaultApp = '';
-    protected $defaultAction = '';
+    protected $defaultApp = 'runner';
+    protected $defaultAction = 'run';
 
     protected $_runner = '';
     protected $_action = '';
@@ -39,7 +40,7 @@ class App implements RunInterface
     public static function instance($configFile = null)
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            self::$instance = new static();
         }
 
         if (is_string($configFile) === true) {
@@ -65,55 +66,60 @@ class App implements RunInterface
         // 初始化变量们
         $this->publicDirectory = realpath(PHP_SAPI === 'cli' ? __DIR__ . '/../../../../public' : $_SERVER['DOCUMENT_ROOT']);
         $this->rootDirectory = realpath($this->publicDirectory . '/..');
-        $this->vendorDirectory = realpath($this->publicDirectory . '/vendor');
-        $this->runtimeDirectory = realpath($this->runtimeDirectory . '/runtime');
+        $this->configDirectory = $this->rootDirectory . '/config';
+        $this->vendorDirectory = $this->rootDirectory . '/vendor';
+        $this->runtimeDirectory = $this->rootDirectory . '/runtime';
     }
 
     public function run()
     {
-        // 运行之前要做的事
-        $this->beforeRun();
+        try {
+            // 运行之前要做的事
+            $this->beforeRun();
 
-        /************开始运行************/
-        // 接收参数
-        $app = Request::all($this->routeParam);
-        if (!$app) {
-            $app = $this->defaultApp;
-        }
-        if (!$app) {
-            throw new \Exception('No App Found');
-        }
-
-        // 初始化配置
-        Config::setConfigFiles($this->configFiles);
-        Config::set($this->tmpConfigs);
-        if ($this->defaultAction) {
-            Route::setDefaultAction($this->defaultAction);
-        }
-
-        // 找寻路由
-        $app = Route::find($app);
-
-        // 解析路由
-        $runner = Route::parseStr($app);
-
-        $find = false;
-        foreach ($this->namespacePool as $namespace) {
-            $testRunner = $namespace . '\\' . $runner;
-            if (class_exists($runner)) {
-                $runner = $testRunner;
-                $find = true;
-                break;
+            /************开始运行************/
+            // 接收参数
+            $app = Request::all($this->routeParamName);
+            if (!$app) {
+                $app = $this->defaultApp;
             }
-        }
+            if (!$app) {
+                throw new \Exception('No App Found');
+            }
 
-        if (!$find) {
-            throw new \Exception('runner不存在：' . $runner);
-        }
-        $action = Route::parseStr($app, 'action');
+            // 初始化配置
+            Config::setConfigFiles($this->configFiles);
+            Config::set($this->tmpConfigs);
+            if ($this->defaultAction) {
+                Route::setDefaultAction($this->defaultAction);
+            }
 
-        // 实例化控制器类并执行动作
-        Route::execute($runner, $action);
+            // 找寻路由
+            $app = Route::find($app);
+
+            // 解析路由
+            $runner = Route::parseStr($app);
+
+            $find = false;
+            foreach ($this->namespacePool as $namespace) {
+                $testRunner = $namespace . '\\' . $runner;
+                if (class_exists($testRunner)) {
+                    $runner = $testRunner;
+                    $find = true;
+                    break;
+                }
+            }
+
+            if (!$find) {
+                throw new \Exception('runner不存在：' . $runner);
+            }
+            $action = Route::parseStr($app, 'action');
+
+            // 实例化控制器类并执行动作
+            Route::execute($runner, $action);
+        } catch (\Exception $e) {
+            Helper::showExceptionTrace($e);
+        }
     }
 
     public function setBaseNamespace($baseNamespace)
@@ -156,6 +162,20 @@ class App implements RunInterface
     public function getDefaultApp()
     {
         return $this->defaultApp;
+    }
+
+    public function setDefaultAction($action)
+    {
+        if ($action) {
+            $this->defaultAction = $action;
+        }
+
+        return $this;
+    }
+
+    public function getDefaultAction()
+    {
+        return $this->defaultAction;
     }
 
     public function addInitItems(...$initItems)
