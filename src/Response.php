@@ -12,7 +12,7 @@ class Response
 {
     const SUCCESS = 0;
 
-    public static function printf($result)
+    public static function print($result)
     {
         exit($result);
     }
@@ -20,7 +20,7 @@ class Response
     public static function json($stat, $msg = '', $data = [])
     {
         header('Content-Type:application/json;charset=utf-8');
-        self::printf(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
+        self::print(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
     }
 
     public static function success($msg = 'OK', $data = [])

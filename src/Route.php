@@ -16,8 +16,8 @@ class Route
 
     public static function initialize()
     {
-        if (App::instance()->rootDirectory . '/route.php') {
-            self::$data = require App::instance()->rootDirectory . '/route.php';
+        if (is_file(App::instance()->configDirectory . '/route.php')) {
+            self::$data = require App::instance()->configDirectory . '/route.php';
         }
 
         if (Request::isCli() === true) {

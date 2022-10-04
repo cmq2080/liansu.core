@@ -7,7 +7,6 @@
 
 namespace liansu\core;
 
-
 class Helper
 {
     public static function str_replace($needle, $replace, $object)
@@ -31,5 +30,44 @@ class Helper
         }
         $url = '?' . $paramName . '=' . $runner . '@' . $action;
         return $url;
+    }
+
+    public static function showExceptionTrace(\Exception $e)
+    {
+        $html = '';
+        // foreach ($e->getTrace() as $item) {
+        //     $shtml = '<p>';
+        //     $shtml .= $item['file'];
+        //     $shtml .= '(' . $item['line'] . '): ';
+        //     $shtml .=  $item['class'] . $item['type'] . $item['function'];
+        //     if ($item['args'] ?? null) {
+        //         foreach ($item['args'] as $key => $value) {
+        //             if (is_string($value)) {
+        //                 $value = '\'' . $value . '\'';
+        //             } elseif (is_array($value)) {
+        //                 $value = 'Array()';
+        //             } elseif (is_object($value)) {
+        //                 $value = 'Object()';
+        //             } elseif (is_resource($value)) {
+        //                 $value = 'Resource()';
+        //             } elseif (is_callable($value)) {
+        //                 $value = 'Callback()';
+        //             } elseif (is_null($value)) {
+        //                 $value = 'Null';
+        //             } elseif (is_bool($value)) {
+        //                 $value = 'Bool';
+        //             }
+
+        //             $item['args'][$key] = $value;
+        //         }
+        //     }
+        //     $shtml .= '(' . implode(', ', $item['args']) . ')';
+        //     $shtml .= '</p>';
+        //     $html .= $shtml;
+        // }
+        $html .= '<h1>Running Wrong!!!</h1>';
+        $html .= '<u>'.$e->getMessage() . '</u><br>';
+        $html .= nl2br($e->getTraceAsString());
+        Response::print($html);
     }
 }
