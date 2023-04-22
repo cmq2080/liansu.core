@@ -1,88 +1,53 @@
 <?php
 
-/**
- * 描述：
- * Created at 2021/5/30 21:42 by mq
- */
-
 namespace liansu\core;
 
 class Config
 {
-    private static $configFiles = [];
     private static $data = [];
 
-    // TODO: Implement initialize() method.
-    public static function initialize()
+    public static function initialize($configFiles, $tmpConfigs = null)
     {
-        foreach (self::$configFiles as $configFile) {
-            $arr = require $configFile;
-            if (is_array($arr) === false) {
-                continue;
-            }
+        $data = [];
+        foreach ($configFiles as $configFile) {
             $filename = pathinfo($configFile, PATHINFO_FILENAME);
-            self::$data[$filename] = self::$data[$filename] ?? [];
-            self::$data[$filename] = array_merge(self::$data[$filename], $arr);
+            $data[$filename] = require $configFile;
         }
+
+        if ($tmpConfigs) {
+            $data = array_merge($data, $tmpConfigs);
+        }
+
+        self::$data = $data;
     }
 
-    public static function setConfigFiles($configFiles)
+    public static function get($key, $default = null)
     {
-        self::$configFiles = $configFiles;
-        self::initialize();
+        $tmpData = self::$data;
+        $tmpData = Helper::array_serialize($tmpData);
+
+        return $tmpData[$key] ?? $default;
     }
 
-    /**
-     * 功能：获取配置
-     * Created at 2020/7/25 18:29 by mq
-     * @param $key
-     * @param string $default
-     * @return array|mixed|null
-     */
-    public static function get($key = null, $default = null)
+    public static function set($key, $value)
     {
-        if ($key === null) {
-            return self::$data;
-        }
-        // 以.为分界，数组分级获取
-        $keys = explode('.', $key);
-        $data = self::$data;
-        foreach ($keys as $s_key) {
-            if (isset($data[$s_key]) === false) {
-                return $default;
-            }
+        $tmpData = self::$data;
+        $tmpData = Helper::array_serialize($tmpData);
 
-            $data = $data[$s_key];
-        }
+        $tmpData[$key] = $value;
 
-        return $data;
+        $tmpData = Helper::array_unserialize($tmpData);
+        self::$data = $tmpData;
     }
 
-    /**
-     * 功能：设置配置
-     * Created at 2021/8/22 21:53 by mq
-     * @param $key
-     * @param null $value
-     */
-    public static function set($key, $value = null)
-    {
-        if (is_array($key) === true) {
-            foreach ($key as $k => $v) {
-                self::$data[$k] = $v;
-            }
-        } else {
-            self::$data[$key] = $value;
-        }
-    }
-
-    /**
-     * 功能：删除配置
-     * Created at 2020/7/25 18:29 by mq
-     * @param $key
-     * @param $value
-     */
     public static function remove($key)
     {
-        unset(self::$data[$key]);
+        $tmpData = self::$data;
+        $tmpData = Helper::array_serialize($tmpData);
+
+        unset($tmpData[$key]);
+
+        $tmpData = Helper::array_unserialize($tmpData);
+        self::$data = $tmpData;
     }
 }

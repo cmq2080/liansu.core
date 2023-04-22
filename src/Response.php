@@ -12,15 +12,15 @@ class Response
 {
     const SUCCESS = 0;
 
-    public static function print($result)
+    public static function printf($result)
     {
         exit($result);
     }
 
     public static function json($stat, $msg = '', $data = [])
     {
-        header('Content-Type:application/json;charset=utf-8');
-        self::print(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
+        header('Content-Type:application/json');
+        self::printf(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
     }
 
     public static function success($msg = 'OK', $data = [])
@@ -32,10 +32,4 @@ class Response
     {
         self::json($stat, $msg, $data);
     }
-
-    //    public static function html($result, $charset = 'utf-8')
-    //    {
-    //        header('Content-Type:text/html;charset:' . $charset);
-    //        self::printf($result);
-    //    }
 }

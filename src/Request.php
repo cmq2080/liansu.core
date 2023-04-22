@@ -54,7 +54,7 @@ class Request
      * Created at 2021/8/22 21:35 by mq
      * @return bool
      */
-    public static function isCli()
+    public static function isCli(): bool
     {
         return PHP_SAPI === 'cli';
     }
@@ -63,5 +63,44 @@ class Request
     {
         Argument::initialize();
         self::$args = Argument::get();
+    }
+
+    public static function getMethod()
+    {
+        if (self::isCli()) {
+            return null;
+        }
+
+        return $_SERVER['REQUEST_METHOD'];
+    }
+
+    public static function isMethod($method): bool
+    {
+        if (!self::isCli()) {
+            return self::getMethod() == strtoupper($method);
+        }
+
+        return false;
+    }
+
+    public static function isGet(): bool
+    {
+        return self::isMethod('GET');
+    }
+
+    public static function isPost(): bool
+    {
+        return self::isMethod('POST');
+    }
+
+    public static function isAjax(): bool
+    {
+        if (!self::isCli()) {
+            if (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"]) == "xmlhttprequest") {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

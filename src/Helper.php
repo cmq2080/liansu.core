@@ -1,10 +1,5 @@
 <?php
 
-/**
- * 描述：
- * Created at 2021/6/6 22:58 by mq
- */
-
 namespace liansu\core;
 
 class Helper
@@ -22,52 +17,93 @@ class Helper
         return $object;
     }
 
-    public static function url($runner, $action = null)
+    // public static function url($runner, $action = null)
+    // {
+    //     $paramName = App::instance()->getRouteParamName();
+    //     if (!$action) {
+    //         $action = App::instance()->getDefaultApp();
+    //     }
+    //     $url = '?' . $paramName . '=' . $runner . '@' . $action;
+    //     return $url;
+    // }
+
+    /**
+     * 数组递级序列化
+     */
+    public static function array_serialize($haystack, $position = '')
     {
-        $paramName = App::instance()->getRouteParamName();
-        if (!$action) {
-            $action = App::instance()->getDefaultApp();
+        $res = [];
+        foreach ($haystack as $key => $value) {
+            // 分析键
+            $type = '';
+            $newKey = ltrim($position . '.' . $type . $key, '.');
+
+            // 分析值
+            if (is_array($value)) {
+                $res = array_merge($res, self::array_serialize($value, $newKey));
+            } else {
+
+                $newValue = $value;
+                $res[$newKey] = $newValue;
+            }
         }
-        $url = '?' . $paramName . '=' . $runner . '@' . $action;
-        return $url;
+
+        return $res;
     }
 
-    public static function showExceptionTrace(\Exception $e)
+    /**
+     * 数组递级反序列化
+     */
+    public static function array_unserialize($serializedArr)
     {
-        $html = '';
-        // foreach ($e->getTrace() as $item) {
-        //     $shtml = '<p>';
-        //     $shtml .= $item['file'];
-        //     $shtml .= '(' . $item['line'] . '): ';
-        //     $shtml .=  $item['class'] . $item['type'] . $item['function'];
-        //     if ($item['args'] ?? null) {
-        //         foreach ($item['args'] as $key => $value) {
-        //             if (is_string($value)) {
-        //                 $value = '\'' . $value . '\'';
-        //             } elseif (is_array($value)) {
-        //                 $value = 'Array()';
-        //             } elseif (is_object($value)) {
-        //                 $value = 'Object()';
-        //             } elseif (is_resource($value)) {
-        //                 $value = 'Resource()';
-        //             } elseif (is_callable($value)) {
-        //                 $value = 'Callback()';
-        //             } elseif (is_null($value)) {
-        //                 $value = 'Null';
-        //             } elseif (is_bool($value)) {
-        //                 $value = 'Bool';
-        //             }
+        $res = [];
+        foreach ($serializedArr as $key => $value) {
+            $keys = explode('.', $key);
+            $youbiao = &$res; // 写个游标吧
+            foreach ($keys as $i => $newKey) {
+                $newKey .= '';
+                $isLast = $i == count($keys) - 1 ? true : false;
 
-        //             $item['args'][$key] = $value;
-        //         }
-        //     }
-        //     $shtml .= '(' . implode(', ', $item['args']) . ')';
-        //     $shtml .= '</p>';
-        //     $html .= $shtml;
-        // }
-        $html .= '<h1>Running Wrong!!!</h1>';
-        $html .= '<u>'.$e->getMessage() . '</u><br>';
-        $html .= nl2br($e->getTraceAsString());
-        Response::print($html);
+                if (!$isLast) {
+                    if (!isset($youbiao[$newKey])) {
+                        $youbiao[$newKey] = [];
+                    }
+
+                    $youbiao = &$youbiao[$newKey];
+                    continue;
+                }
+
+                $youbiao[$newKey] = $value;
+            }
+        }
+
+        return $res;
+    }
+
+    public static function getRootDirectory()
+    {
+        if (defined('ROOT_DIRECTORY')) {
+            return ROOT_DIRECTORY;
+        }
+
+        return realpath(__DIR__ . '/../../../..');
+    }
+
+    public static function getPublicDirectory()
+    {
+        if (defined('PUBLIC_DIRECTORY')) {
+            return PUBLIC_DIRECTORY;
+        }
+
+        return realpath(__DIR__ . '/../../../../public');
+    }
+
+    public static function getRuntimeDirectory()
+    {
+        if (defined('RUNTIME_DIRECTORY')) {
+            return RUNTIME_DIRECTORY;
+        }
+
+        return realpath(__DIR__ . '/../../../../runtime');
     }
 }

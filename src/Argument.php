@@ -37,14 +37,13 @@ class Argument
 
                 if (self::isArgument($arg) === true) { // 找键
                     $key = substr($arg, 1);
+                    $value = true; // 值默认为true
 
-                    if (isset($argv[$i + 1]) === false) { // 下一个：没啦，值默认为true
-                        $value = true;
-                    } else if (self::isArgument($argv[$i + 1]) === true) { // 下一个：也是键，值默认为true
-                        $value = true;
-                    } else {
-                        $value = $argv[$i + 1];
-                        $i++;
+                    if (isset($argv[$i + 1])) {
+                        $nextArg = $argv[$i + 1];
+                        if (!self::isArgument($nextArg) && !self::isArgumentWithValue($nextArg)) { // 下一个参数绝对不作为参数名出现，那应该就是值了
+                            $value = $nextArg;
+                        }
                     }
                 } else if (self::isArgumentWithValue($arg)) {
                     preg_match('/^\-([0-9A-Za-z_-]+)=(\S+)$/is', $arg, $matches);
@@ -77,10 +76,10 @@ class Argument
      * @param $key
      * @param $value
      */
-    public static function set($key, $value)
-    {
-        // TODO: Implement set() method.
-    }
+    // public static function set($key, $value)
+    // {
+    //     // TODO: Implement set() method.
+    // }
 
     private static function isArgument($arg)
     {
