@@ -1,15 +1,15 @@
 <?php
 
-namespace liansu\core\init;
+namespace liansu\init;
 
-use liansu\core\App;
-use liansu\core\Argument;
-use liansu\core\Config;
-use liansu\core\interfaces\IRun;
-use liansu\core\Request;
-use liansu\core\Route;
+use liansu\App;
+use liansu\facade\Argument;
+use liansu\facade\Config;
+use liansu\interfaces\IRun;
+use liansu\facade\Request;
+use liansu\facade\Route;
 
-class initialize implements IRun
+class Initialize implements IRun
 {
     public function run()
     {

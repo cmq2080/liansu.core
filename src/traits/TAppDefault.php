@@ -1,11 +1,11 @@
 <?php
 
-namespace liansu\core\traits;
+namespace liansu\traits;
 
 trait TAppDefault
 {
-    private $defaultRunner = 'index';
-    private $defaultAction = 'index';
+    protected $defaultRunner = 'index';
+    protected $defaultAction = 'index';
 
     public function setDefaultRunner($defaultRunner)
     {

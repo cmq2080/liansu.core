@@ -5,31 +5,30 @@
  * Created at 2021/5/30 21:45 by mq
  */
 
-namespace liansu\core;
-
+namespace liansu;
 
 class Response
 {
     const SUCCESS = 0;
 
-    public static function printf($result)
+    public function printf($result)
     {
         exit($result);
     }
 
-    public static function json($stat, $msg = '', $data = [])
+    public function json($stat, $msg = '', $data = [])
     {
         header('Content-Type:application/json');
-        self::printf(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
+        $this->printf(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
     }
 
-    public static function success($msg = 'OK', $data = [])
+    public function success($msg = 'OK', $data = [])
     {
-        self::json(self::SUCCESS, $msg, $data);
+        $this->json(self::SUCCESS, $msg, $data);
     }
 
-    public static function error($msg = 'ERR', $data = [], $stat = 1)
+    public function error($msg = 'ERR', $data = [], $stat = 1)
     {
-        self::json($stat, $msg, $data);
+        $this->json($stat, $msg, $data);
     }
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace liansu\core\traits;
+namespace liansu\traits;
 
-use liansu\core\interfaces\IRun;
+use liansu\interfaces\IRun;
 
 trait TAppInit
 {
     protected $inits = [
-        \liansu\core\init\initialize::class,
+        \liansu\init\Initialize::class,
     ];
 
     /**
@@ -20,8 +20,8 @@ trait TAppInit
                 foreach ($item as $item2) {
                     $this->init($item2);
                 }
-            } else if (is_string($item)) { // 字符串类型，直接塞入（以后在实例化）
-                $this->init[] = $item;
+            } else if (is_string($item)) { // 字符串类型，直接塞入（以后再实例化）
+                $this->inits[] = $item;
             } else if (is_callable($item)) { // 回调方法，new一个匿名类对象包含它
                 $this->inits[] = new class($item) implements IRun
                 {
@@ -43,6 +43,8 @@ trait TAppInit
                 throw new \Exception('ERROR');
             }
         }
+
+        return $this;
     }
 
     /**

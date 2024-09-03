@@ -1,27 +1,30 @@
 <?php
 
-namespace liansu\core;
+namespace liansu;
+
+use liansu\facade\Config;
+use liansu\facade\Request;
 
 class Route
 {
-    private static $routeParam = 'r';
-    private static $routeDelimiter = '@';
-    private static $defaultRunner;
-    private static $defaultAction;
+    private $routeParam;
+    private $routeDelimiter;
+    private $defaultRunner;
+    private $defaultAction;
 
-    public static function initialize()
+    public function initialize()
     {
-        self::$defaultRunner = App::instance()->getDefaultRunner();
-        self::$defaultAction = App::instance()->getDefaultAction();
-        if ($routeParam = Config::get('app.route_param')) {
-            self::$routeParam = $routeParam;
-        }
+        $this->defaultRunner = App::instance()->getDefaultRunner();
+        $this->defaultAction = App::instance()->getDefaultAction();
+
+        $this->routeParam = Config::get('app.route_param', 'r');
+        $this->routeDelimiter = Config::get('app.route_delimiter', '@');
     }
 
-    public static function parse()
+    public function parse()
     {
-        $delimiter = self::$routeDelimiter;
-        $r = Request::all(self::$routeParam, self::$defaultRunner . $delimiter . self::$defaultAction);
+        $delimiter = $this->routeDelimiter;
+        $r = Request::all($this->routeParam, $this->defaultRunner . $delimiter . $this->defaultAction);
         if (!$r) {
             throw new \Exception('No Route Found');
         }
@@ -29,9 +32,19 @@ class Route
         $r = str_replace('/', '\\', $r);
         $r = trim($r, '\\');
 
-        $runner = (explode($delimiter, $r)[0] ?? null) ?: self::$defaultRunner;
-        $action = (explode($delimiter, $r)[1] ?? null) ?: self::$defaultAction;
+        $runner = (explode($delimiter, $r)[0] ?? null) ?: $this->defaultRunner;
+        $action = (explode($delimiter, $r)[1] ?? null) ?: $this->defaultAction;
 
         return ['runner' => $runner, 'action' => $action];
+    }
+
+    public function getRouteParam() // Q:变量总是在使用时才会创建空间，那么，类变量呢？
+    {
+        return $this->routeParam;
+    }
+
+    public function getRouteDelimiter()
+    {
+        return $this->routeDelimiter;
     }
 }
