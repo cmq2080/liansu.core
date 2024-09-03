@@ -5,45 +5,47 @@
  * Created at 2021/5/30 21:44 by mq
  */
 
-namespace liansu\core;
+namespace liansu;
+
+use liansu\facade\Argument;
 
 class Request
 {
-    private static $args = [];
+    private $args = [];
 
     /**
      * 功能：初始化
      * Created at 2021/8/22 16:12 by mq
      */
-    public static function initialize()
+    public function initialize()
     {
         // TODO: Implement initialize() method.
-        if (self::isCli() === true) {
-            self::initArguments();
+        if ($this->isCli() === true) {
+            $this->initArguments();
         }
     }
 
-    private static function _get($method, $key = null, $default = null)
+    private function _get($method, $key = null, $default = null)
     {
         if ($method === 'GET') {
             return $key === null ? $_GET : ($_GET[$key] ?? $default);
         } else if ($method === 'POST') {
             return $key === null ? $_POST : ($_POST[$key] ?? $default);
         } else if ($method === 'ARGS') {
-            return $key === null ? self::$args : (self::$args[$key] ?? $default);
+            return $key === null ? $this->args : ($this->args[$key] ?? $default);
         } else if ($method === 'ALL') {
-            $allData = array_merge($_REQUEST, self::$args);
+            $allData = array_merge($_REQUEST, $this->args);
             return $key === null ? $allData : ($allData[$key] ?? $default);
         }
 
         return $default;
     }
 
-    public static function __callStatic($name, $arguments)
+    public function __call($name, $arguments)
     {
         // TODO: Implement __callStatic() method.
         if (in_array(strtoupper($name), ['GET', 'POST', 'ARGS', 'ALL']) === true) {
-            return self::_get(strtoupper($name), $arguments[0] ?? null, $arguments[1] ?? null);
+            return $this->_get(strtoupper($name), $arguments[0] ?? null, $arguments[1] ?? null);
         }
 
         return null;
@@ -54,48 +56,48 @@ class Request
      * Created at 2021/8/22 21:35 by mq
      * @return bool
      */
-    public static function isCli(): bool
+    public function isCli(): bool
     {
         return PHP_SAPI === 'cli';
     }
 
-    private static function initArguments()
+    private function initArguments()
     {
         Argument::initialize();
-        self::$args = Argument::get();
+        $this->args = Argument::get();
     }
 
-    public static function getMethod()
+    public function getMethod()
     {
-        if (self::isCli()) {
+        if ($this->isCli()) {
             return null;
         }
 
         return $_SERVER['REQUEST_METHOD'];
     }
 
-    public static function isMethod($method): bool
+    public function isMethod($method): bool
     {
-        if (!self::isCli()) {
-            return self::getMethod() == strtoupper($method);
+        if (!$this->isCli()) {
+            return $this->getMethod() == strtoupper($method);
         }
 
         return false;
     }
 
-    public static function isGet(): bool
+    public function isGet(): bool
     {
-        return self::isMethod('GET');
+        return $this->isMethod('GET');
     }
 
-    public static function isPost(): bool
+    public function isPost(): bool
     {
-        return self::isMethod('POST');
+        return $this->isMethod('POST');
     }
 
-    public static function isAjax(): bool
+    public function isAjax(): bool
     {
-        if (!self::isCli()) {
+        if (!$this->isCli()) {
             if (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"]) == "xmlhttprequest") {
                 return true;
             }
