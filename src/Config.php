@@ -1,12 +1,14 @@
 <?php
 
-namespace liansu\core;
+namespace liansu;
+
+use liansu\facade\Helper;
 
 class Config
 {
-    private static $data = [];
+    private $data = [];
 
-    public static function initialize($configFiles, $tmpConfigs = null)
+    public function initialize($configFiles, $tmpConfigs = null)
     {
         $data = [];
         foreach ($configFiles as $configFile) {
@@ -18,36 +20,41 @@ class Config
             $data = array_merge($data, $tmpConfigs);
         }
 
-        self::$data = $data;
+        $this->data = $data;
     }
 
-    public static function get($key, $default = null)
+    public function get($key, $default = null)
     {
-        $tmpData = self::$data;
+        $tmpData = $this->data;
         $tmpData = Helper::array_serialize($tmpData);
 
         return $tmpData[$key] ?? $default;
     }
 
-    public static function set($key, $value)
+    protected function modify(callable $func)
     {
-        $tmpData = self::$data;
+        $tmpData = $this->data;
         $tmpData = Helper::array_serialize($tmpData);
 
-        $tmpData[$key] = $value;
+        $tmpData = $func($tmpData);
 
         $tmpData = Helper::array_unserialize($tmpData);
-        self::$data = $tmpData;
+        $this->data = $tmpData;
     }
 
-    public static function remove($key)
+    public function set($key, $value)
     {
-        $tmpData = self::$data;
-        $tmpData = Helper::array_serialize($tmpData);
+        $this->modify(function ($tmpData) use ($key, $value) {
+            $tmpData[$key] = $value;
 
-        unset($tmpData[$key]);
+            return $tmpData;
+        });
+    }
 
-        $tmpData = Helper::array_unserialize($tmpData);
-        self::$data = $tmpData;
+    public function remove($key)
+    {
+        $this->modify(function ($tmpData) use ($key) {
+            unset($tmpData[$key]);
+        });
     }
 }

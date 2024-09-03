@@ -1,13 +1,13 @@
 <?php
 
-namespace liansu\core\traits;
+namespace liansu\traits;
 
 trait TAppConfig
 {
-    private $configFiles = [];
-    private $tmpConfigs = [];
+    protected $configFiles = [];
+    protected $tmpConfigs = [];
 
-    private function setConfigFiles($configFiles)
+    protected function setConfigFiles($configFiles)
     {
         if (is_array($configFiles)) {
             $this->configFiles = $configFiles;

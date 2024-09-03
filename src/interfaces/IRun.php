@@ -1,6 +1,6 @@
 <?php
 
-namespace liansu\core\interfaces;
+namespace liansu\interfaces;
 
 interface IRun
 {
