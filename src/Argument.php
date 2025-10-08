@@ -62,13 +62,13 @@ class Argument
      * 功能：获取参数
      * Created at 2021/8/22 16:13 by mq
      * @param string $key
-     * @param string $default
+     * @param mixed $default
      * @return mixed
      */
-    public function get($key = null, $default = '')
+    public function get($key = null, $default = null)
     {
         // TODO: Implement get() method.
-        return $key === null ? $this->data : ($this->data[$key] ?? $default);
+        return empty($key) ? $this->data : ($this->data[$key] ?? $default);
     }
 
     /**

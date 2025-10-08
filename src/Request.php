@@ -7,6 +7,7 @@
 
 namespace liansu;
 
+use liansu\exception\LiansuException;
 use liansu\facade\Argument;
 
 class Request
@@ -20,39 +21,67 @@ class Request
     public function initialize()
     {
         // TODO: Implement initialize() method.
-        if ($this->isCli() === true) {
+        if ($this->isCli()) {
             $this->initArguments();
         }
     }
 
+    /**
+     * 依照方式获取数据
+     * @param string $method
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     private function _get($method, $key = null, $default = null)
     {
-        if ($method === 'GET') {
-            return $key === null ? $_GET : ($_GET[$key] ?? $default);
-        } else if ($method === 'POST') {
-            return $key === null ? $_POST : ($_POST[$key] ?? $default);
-        } else if ($method === 'ARGS') {
-            return $key === null ? $this->args : ($this->args[$key] ?? $default);
-        } else if ($method === 'ALL') {
-            $allData = array_merge($_REQUEST, $this->args);
-            return $key === null ? $allData : ($allData[$key] ?? $default);
+        $tmpData = [];
+        switch ($method) {
+            case 'GET':
+                $tmpData = $_GET;
+                break;
+            case 'POST':
+                $tmpData = $_POST;
+                break;
+            case 'ARGS':
+                $tmpData = $this->args;
+                break;
+            case 'ALL':
+                $tmpData = array_merge($_REQUEST, $this->args);
+                break;
+            default:
+                throw new LiansuException("Method Of \liansu\Request {$method} Is Invalid");
         }
 
-        return $default;
+        return empty($key) ? $tmpData : ($tmpData[$key] ?? $default);
     }
 
     public function __call($name, $arguments)
     {
         // TODO: Implement __callStatic() method.
-        if (in_array(strtoupper($name), ['GET', 'POST', 'ARGS', 'ALL']) === true) {
-            return $this->_get(strtoupper($name), $arguments[0] ?? null, $arguments[1] ?? null);
+        $name = strtoupper($name);
+        if (in_array($name, ['GET', 'POST', 'ARGS', 'ALL']) === true) {
+            // cli模式下不支持get、post方法
+            if ($this->isCli() && in_array($name, ['GET', 'POST'])) {
+                throw new LiansuException("Method Of \liansu\Request {$name} Is Invalid In CLI Mode");
+            }
+            // 非cli模式下不支持args方法
+            if (!$this->isCli() && in_array($name, ['ARGS'])) {
+                throw new LiansuException("Method Of \liansu\Request {$name} Is Only In CLI Mode");
+            }
+
+            return $this->_get($name, $arguments[0] ?? null, $arguments[1] ?? null);
+        } else if (in_array($name, ['ISGET', 'ISPOST'])) {
+            $method = substr($name, 2);
+
+            return $this->isMethod($method);
         }
 
         return null;
     }
 
     /**
-     * 功能：
+     * 功能：是否以Cli模式运行
      * Created at 2021/8/22 21:35 by mq
      * @return bool
      */
@@ -63,44 +92,36 @@ class Request
 
     private function initArguments()
     {
-        Argument::initialize();
         $this->args = Argument::get();
     }
 
+    /**
+     * 获取请求方式
+     * @return string|bool
+     */
     public function getMethod()
     {
-        if ($this->isCli()) {
-            return null;
-        }
-
-        return $_SERVER['REQUEST_METHOD'];
+        return $_SERVER['REQUEST_METHOD'] ?? false;
     }
 
+    /**
+     * 当前请求方式是否是xx方式
+     * @param string $method
+     * @return bool
+     */
     public function isMethod($method): bool
     {
-        if (!$this->isCli()) {
-            return $this->getMethod() == strtoupper($method);
+        $method = strtoupper($method);
+        if (!in_array($method, ['GET', 'POST'])) {
+            return false;
         }
-
-        return false;
-    }
-
-    public function isGet(): bool
-    {
-        return $this->isMethod('GET');
-    }
-
-    public function isPost(): bool
-    {
-        return $this->isMethod('POST');
+        return $this->getMethod() === $method;
     }
 
     public function isAjax(): bool
     {
-        if (!$this->isCli()) {
-            if (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"]) == "xmlhttprequest") {
-                return true;
-            }
+        if (!empty($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"]) == "xmlhttprequest") {
+            return true;
         }
 
         return false;
