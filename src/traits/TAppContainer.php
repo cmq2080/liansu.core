@@ -16,9 +16,4 @@ trait TAppContainer
     {
         return $this->container->get($applicationClassName);
     }
-
-    public function registerContainerInstance($applicationClassName, $instance = null)
-    {
-        $this->container->register($applicationClassName, $instance);
-    }
 }

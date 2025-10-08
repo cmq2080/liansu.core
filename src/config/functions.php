@@ -1,14 +1,8 @@
 <?php
-
-namespace liansu;
-
-use ReflectionClass;
-
-class Helper
-{
-    public function str_replace($needle, $replace, $object)
+if (!function_exists('str_replace_all')) {
+    function str_replace_all($needle, $replace, $object)
     {
-        if (is_array($needle) === true) {
+        if (is_array($needle) === true) { // 多个搜索项容易形成积压替换（前一个的替换结果刚好构成第二个的替换要件）
             foreach ($needle as $value) {
                 $object = str_replace($value, $replace, $object);
             }
@@ -18,28 +12,22 @@ class Helper
 
         return $object;
     }
+}
 
-    // public function url($runner, $action = null)
-    // {
-    //     $paramName = App::instance()->getRouteParamName();
-    //     if (!$action) {
-    //         $action = App::instance()->getDefaultApp();
-    //     }
-    //     $url = '?' . $paramName . '=' . $runner . '@' . $action;
-    //     return $url;
-    // }
-
-    public function is_json($str)
+if (!function_exists('is_json')) {
+    function is_json($str)
     {
         $result = json_decode($str);
         return $result === null ? false : true;
     }
+}
 
+if (!function_exists('get_as_array')) {
     /**
      * @param array|callable|string $needle
      * @return array|bool
      */
-    public function get_as_array($needle)
+    function get_as_array($needle)
     {
         $result = false;
         if (is_array($needle)) {
@@ -47,7 +35,7 @@ class Helper
         } else if (is_callable($needle)) {
             $result = $needle();
         } else if (is_string($needle)) {
-            if ($this->is_json($needle)) {
+            if (is_json($needle)) {
                 $result = json_decode($needle, true);
             } else if (is_file($needle)) {
                 $result = require $needle;
@@ -56,11 +44,13 @@ class Helper
 
         return is_array($result) ? $result : false;
     }
+}
 
+if (!function_exists('array_serialize')) {
     /**
      * 数组递级序列化
      */
-    public function array_serialize($haystack, $position = '')
+    function array_serialize($haystack, $position = '')
     {
         $res = [];
         foreach ($haystack as $key => $value) {
@@ -70,7 +60,7 @@ class Helper
 
             // 分析值
             if (is_array($value)) {
-                $res = array_merge($res, $this->array_serialize($value, $newKey));
+                $res = array_merge($res, array_serialize($value, $newKey));
             } else {
 
                 $newValue = $value;
@@ -80,11 +70,13 @@ class Helper
 
         return $res;
     }
+}
 
+if (!function_exists('array_unserialize')) {
     /**
      * 数组递级反序列化
      */
-    public function array_unserialize($serializedArr)
+    function array_unserialize($serializedArr)
     {
         $res = [];
         foreach ($serializedArr as $key => $value) {
@@ -109,51 +101,63 @@ class Helper
 
         return $res;
     }
+}
 
-    public function getRootDirectory()
+if (!function_exists('get_root_dir')) {
+    function get_root_dir()
     {
         if (defined('ROOT_DIRECTORY')) {
             return ROOT_DIRECTORY;
         }
 
-        return realpath(__DIR__ . '/../../../..');
+        return realpath(__DIR__ . '/../../../../..');
     }
+}
 
-    public function getPublicDirectory()
+if (!function_exists('get_public_dir')) {
+    function get_public_dir()
     {
         if (defined('PUBLIC_DIRECTORY')) {
             return PUBLIC_DIRECTORY;
         }
 
-        return realpath(__DIR__ . '/../../../../public');
+        return get_root_dir() . '/public';
     }
+}
 
-    public function getRuntimeDirectory()
+if (!function_exists('get_runtime_dir')) {
+    function get_runtime_dir()
     {
         if (defined('RUNTIME_DIRECTORY')) {
             return RUNTIME_DIRECTORY;
         }
 
-        return realpath(__DIR__ . '/../../../../runtime');
+        return get_root_dir() . '/runtime';
     }
+}
 
-    public function getVendorDirectory()
+if (!function_exists('get_vendor_dir')) {
+    function get_vendor_dir()
     {
         if (defined('VENDOR_DIRECTORY')) {
             return VENDOR_DIRECTORY;
         }
 
-        return realpath(__DIR__ . '/../../../../vendor');
+        return get_root_dir() . '/vendor';
     }
+}
 
-    public function initDirectory($dir)
+if (!function_exists('init_dir')) {
+    function init_dir($dir)
     {
         if (!is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
     }
+}
 
-    public function clearDirectory($dir)
+if (!function_exists('clear_dir')) {
+    function clear_dir($dir)
     {
         if (!is_dir($dir)) {
             return;
@@ -167,13 +171,15 @@ class Helper
             if (is_file($filepath)) {
                 unlink($filepath);
             } else if (is_dir($filepath)) {
-                $this->clearDirectory($filepath);
+                clear_dir($filepath);
                 rmdir($filepath);
             }
         }
     }
+}
 
-    public function scanActions($runner)
+if (!function_exists('scan_for_actions')) {
+    function scan_for_actions($runner)
     {
         $reflectionClass = new ReflectionClass($runner);
         $actions = [];
@@ -194,12 +200,25 @@ class Helper
 
         return $actions;
     }
+}
 
-    public function module_exists($module)
+if (!function_exists('module_exists')) {
+    function module_exists($module)
     {
-        $vendorDir = $this->getVendorDirectory();
+        $vendorDir = get_vendor_dir();
         $filepath = $vendorDir . '/' . $module . '/composer.json';
 
         return is_file($filepath);
     }
 }
+
+
+
+
+
+
+
+
+
+
+

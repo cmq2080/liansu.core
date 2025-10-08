@@ -9,6 +9,10 @@ namespace liansu\facade;
 
 use liansu\Facade;
 
+/**
+ * @method void initialize()
+ * @method mixed get($key = null, $default = null)
+ */
 class Argument extends Facade
 {
     protected static function getApplicationClassName(): string

@@ -26,7 +26,7 @@ class Config
     public function get($key, $default = null)
     {
         $tmpData = $this->data;
-        $tmpData = Helper::array_serialize($tmpData);
+        $tmpData = array_serialize($tmpData);
 
         return $tmpData[$key] ?? $default;
     }
@@ -34,11 +34,11 @@ class Config
     protected function modify(callable $func)
     {
         $tmpData = $this->data;
-        $tmpData = Helper::array_serialize($tmpData);
+        $tmpData = array_serialize($tmpData);
 
         $tmpData = $func($tmpData);
 
-        $tmpData = Helper::array_unserialize($tmpData);
+        $tmpData = array_unserialize($tmpData);
         $this->data = $tmpData;
     }
 

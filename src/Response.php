@@ -11,24 +11,18 @@ class Response
 {
     const SUCCESS = 0;
 
-    public function printf($result)
-    {
-        exit($result);
-    }
-
     public function json($stat, $msg = '', $data = [])
     {
-        header('Content-Type:application/json');
-        $this->printf(json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE));
+        return json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE);
     }
 
-    public function success($msg = 'OK', $data = [])
+    public function success($data = [], $msg = 'OK')
     {
-        $this->json(self::SUCCESS, $msg, $data);
+        return $this->json(self::SUCCESS, $msg, $data);
     }
 
-    public function error($msg = 'ERR', $data = [], $stat = 1)
+    public function error($msg = 'ERR', $stat = 1, $data = [])
     {
-        $this->json($stat, $msg, $data);
+        return $this->json($stat, $msg, $data);
     }
 }

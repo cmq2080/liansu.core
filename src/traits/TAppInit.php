@@ -6,9 +6,7 @@ use liansu\interfaces\IRun;
 
 trait TAppInit
 {
-    protected $inits = [
-        \liansu\init\Initialize::class,
-    ];
+    protected $inits = [];
 
     /**
      * 添加初始化组件
