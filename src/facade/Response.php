@@ -13,6 +13,7 @@ use liansu\Facade;
  * @method string json($stat, $msg = '', $data = [])
  * @method string success($data = [], $msg = 'OK')
  * @method string error($msg = 'ERR', $stat = 1, $data = [])
+ * @method string isInFormat($content)
  */
 class Response extends Facade
 {
