@@ -21,8 +21,7 @@ trait TAppInit
             } else if (is_string($item)) { // 字符串类型，直接塞入（以后再实例化）
                 $this->inits[] = $item;
             } else if (is_callable($item)) { // 回调方法，new一个匿名类对象包含它
-                $this->inits[] = new class($item) implements IRun
-                {
+                $this->inits[] = new class ($item) implements IRun {
                     private $defaultFunc;
                     public function __construct(callable $item)
                     {
@@ -43,6 +42,63 @@ trait TAppInit
         }
 
         return $this;
+    }
+
+    protected function autoloadInits()
+    {
+        $appInits = $this->inits;
+        $this->inits = [];
+
+        $groupDir = VENDOR2_DIRECTORY . '/liansu';
+        $initMapping = [];
+        foreach (scandir($groupDir) as $module) {
+            if ($module === '.' || $module === '..') {
+                continue;
+            }
+            // 扫描每个模块的init目录，找出init类文件
+            $initDir = $groupDir . '/' . $module . '/src/init';
+            if (!is_dir($initDir)) {
+                continue;
+            }
+
+            foreach (scandir($initDir) as $name) {
+                if ($name === '.' || $name === '..') {
+                    continue;
+                }
+
+                $filename = pathinfo($initDir . '/' . $name, PATHINFO_FILENAME);
+                $initClassName = '\\liansu\\init\\' . $filename;
+                if (!class_exists($initClassName)) {
+                    continue;
+                }
+
+                if (!(new $initClassName() instanceof IRun)) {
+                    continue;
+                }
+
+                $initMapping[$module][] = $initClassName;
+            }
+        }
+
+        // 按优先级加载
+        // core > core_plus > api
+        foreach (['core', 'core_plus', 'api', 'framework'] as $module) {
+            if (empty($initMapping[$module])) {
+                continue;
+            }
+            $this->init(...$initMapping[$module]);
+            unset($initMapping[$module]);
+        }
+
+        foreach ($initMapping as $module => $inits) {
+            $this->init(...$inits);
+            unset($initMapping[$module]);
+        }
+
+        // 加载应用初始化组件（这个级别最低）
+        foreach ($appInits as $init) {
+            $this->init($init);
+        }
     }
 
     /**

@@ -11,7 +11,7 @@ class Response
 {
     const SUCCESS = 0;
 
-    public function json($stat, $msg = '', $data = [])
+    public function json($stat, $msg = '', $data = null)
     {
         return json_encode(['stat' => $stat, 'msg' => $msg, 'data' => $data], JSON_UNESCAPED_UNICODE);
     }
@@ -21,8 +21,21 @@ class Response
         return $this->json(self::SUCCESS, $msg, $data);
     }
 
-    public function error($msg = 'ERR', $stat = 1, $data = [])
+    public function error($msg = 'ERR', $stat = 1, $data = null)
     {
         return $this->json($stat, $msg, $data);
+    }
+
+    public function isInFormat($content)
+    {
+        if (is_string($content)) {
+            $content = json_decode($content, true);
+        }
+
+        if (!is_array($content)) {
+            return false;
+        }
+
+        return isset($content['stat']) && isset($content['msg']) && isset($content['data']);
     }
 }

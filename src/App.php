@@ -4,7 +4,6 @@ namespace liansu;
 
 use liansu\facade\Response;
 use liansu\facade\Route;
-use liansu\interfaces\IRun;
 use liansu\traits\TAppConfig;
 use liansu\traits\TAppContainer;
 use liansu\traits\TAppDefault;
@@ -27,14 +26,18 @@ class App
     protected $runner;
     protected $action;
 
+    /**
+     * Summary of instance
+     * @param mixed $configFiles
+     * @return \liansu\App
+     */
     public static function instance($configFiles = null)
     {
         if (!self::$instance) {
             // 这里使用延迟静态绑定
             $instance = new static();
-            // 初始化容器
-            $instance->initializeContainer();
 
+            // 初始化预加载的配置文件（此时尚未加载！）
             if ($configFiles) {
                 $instance->setConfigFiles($configFiles);
             } else {
@@ -66,7 +69,11 @@ class App
         defined('RUNTIME_DIRECTORY') || define('RUNTIME_DIRECTORY', ROOT_DIRECTORY . '/runtime');
         defined('VENDOR_DIRECTORY') || define('VENDOR_DIRECTORY', ROOT_DIRECTORY . '/vendor');
 
+        // 加载常用函数
         require __DIR__ . '/config/functions.php';
+
+        // 初始化容器
+        $this->initializeContainer();
     }
 
     public function setFirstNamespace($firstNamespace)
@@ -151,9 +158,15 @@ class App
             }
 
             $driver = new $this->runner(); // 其实是new {$this->runner}();
-            $driver->{$this->action}();
+            $response = $driver->{$this->action}();
+
+            if (isset($response) && Response::isInFormat($response)) {
+                echo $response;
+            }
+
+            return;
         } catch (\Throwable $th) {
-            return Response::error($th->getMessage());
+            exit(Response::error($th->getMessage(), $th->getCode(), $th->getTrace()));
         }
     }
 
@@ -161,54 +174,5 @@ class App
     {
         $this->autoloadInits();
         array_unshift($this->namespaces, $this->firstNamespace);
-    }
-
-    protected function autoloadInits()
-    {
-        $groupDir = VENDOR2_DIRECTORY . '/liansu';
-        $initMapping = [];
-        foreach (scandir($groupDir) as $module) {
-            if ($module === '.' || $module === '..') {
-                continue;
-            }
-            // 扫描每个模块的init目录，找出init类文件
-            $initDir = $groupDir . '/' . $module . '/src/init';
-            if (!is_dir($initDir)) {
-                continue;
-            }
-
-            foreach (scandir($initDir) as $name) {
-                if ($name === '.' || $name === '..') {
-                    continue;
-                }
-
-                $filename = pathinfo($initDir . '/' . $name, PATHINFO_FILENAME);
-                $initClassName = '\\liansu\\init\\' . $filename;
-                if (!class_exists($initClassName)) {
-                    continue;
-                }
-
-                if (!(new $initClassName() instanceof IRun)) {
-                    continue;
-                }
-
-                $initMapping[$module][] = $initClassName;
-            }
-        }
-
-        // 按优先级加载
-        // core > core_plus > api
-        foreach (['core', 'core_plus', 'api', 'framework'] as $module) {
-            if (empty($initMapping[$module])) {
-                continue;
-            }
-            $this->init(...$initMapping[$module]);
-            unset($initMapping[$module]);
-        }
-
-        foreach ($initMapping as $module => $inits) {
-            $this->init(...$inits);
-            unset($initMapping[$module]);
-        }
     }
 }
