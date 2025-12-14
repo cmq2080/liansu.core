@@ -78,7 +78,7 @@ class App
 
     public function setFirstNamespace($firstNamespace)
     {
-        if (is_string($$firstNamespace)) {
+        if (is_string($firstNamespace)) {
             $this->firstNamespace = $firstNamespace;
         }
 
