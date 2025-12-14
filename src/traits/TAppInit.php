@@ -49,7 +49,7 @@ trait TAppInit
         $appInits = $this->inits;
         $this->inits = [];
 
-        $groupDir = VENDOR2_DIRECTORY . '/liansu';
+        $groupDir = VENDOR_DIRECTORY . '/liansu';
         $initMapping = [];
         foreach (scandir($groupDir) as $module) {
             if ($module === '.' || $module === '..') {
