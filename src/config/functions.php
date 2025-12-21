@@ -62,7 +62,6 @@ if (!function_exists('array_serialize')) {
             if (is_array($value)) {
                 $res = array_merge($res, array_serialize($value, $newKey));
             } else {
-
                 $newValue = $value;
                 $res[$newKey] = $newValue;
             }
@@ -212,13 +211,52 @@ if (!function_exists('module_exists')) {
     }
 }
 
+if (!function_exists('sys_cache')) {
+    defined('SYS_CACHE_OP_SET') || define('SYS_CACHE_OP_SET', 1);
+    defined('SYS_CACHE_OP_GET') || define('SYS_CACHE_OP_GET', 2);
+    defined('SYS_CACHE_OP_REMOVE') || define('SYS_CACHE_OP_REMOVE', 8);
+    defined('SYS_CACHE_OP_CLEAR') || define('SYS_CACHE_OP_CLEAR', 9);
 
-
-
-
-
-
-
-
-
-
+    function sys_cache($op, $key = null, $value = null)
+    {
+        $cacheDir = RUNTIME_DIRECTORY . '/tmp';
+        switch ($op) {
+            case SYS_CACHE_OP_SET:// 存入系统缓存文件
+                if (preg_match('/(^[a-zA-Z_])[a-zA-Z0-9_]*[a-zA-Z0-9_]$/', $key) === false) {
+                    throw new \Exception('Key Is Invalid');
+                }
+                if (!is_string($value)) {
+                    throw new \Exception('Value Is Invalid');
+                }
+                if (!is_dir($cacheDir)) {
+                    mkdir($cacheDir, 0777, true);
+                }
+                $cacheFile = $cacheDir . '/' . $key . '.cache';
+                file_put_contents($cacheFile, $value);
+                break;
+            case SYS_CACHE_OP_GET:// 获取系统缓存文件
+                if (preg_match('/(^[a-zA-Z_])[a-zA-Z0-9_]*[a-zA-Z0-9_]$/', $key) === false) {
+                    throw new \Exception('Key Is Invalid');
+                }
+                $cacheFile = $cacheDir . '/' . $key . '.cache';
+                if (!is_file($cacheFile)) {
+                    return false;
+                }
+                return file_get_contents($cacheFile);
+            case SYS_CACHE_OP_CLEAR:
+                foreach (scandir($cacheDir) as $node) {
+                    if ($node == '.' || $node == '..') {
+                        continue;
+                    }
+                    if (!is_file($cacheDir . '/' . $node) || substr($node, -6) != '.cache') {
+                        continue;
+                    }
+                    unlink($cacheDir . '/' . $node);
+                }
+                break;
+            default:
+                throw new \Exception('Op Error');
+        }
+        return true;
+    }
+}

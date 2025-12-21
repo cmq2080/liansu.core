@@ -23,15 +23,12 @@ class Config
         $this->data = $data;
     }
 
-    public function get($key, $default = null)
-    {
-        $tmpData = $this->data;
-        $tmpData = array_serialize($tmpData);
-
-        return $tmpData[$key] ?? $default;
-    }
-
-    protected function modify(callable $func)
+    /**
+     * Summary of aspect
+     * @param callable $func
+     * @return void
+     */
+    protected function aspect(callable $func)
     {
         $tmpData = $this->data;
         $tmpData = array_serialize($tmpData);
@@ -42,9 +39,27 @@ class Config
         $this->data = $tmpData;
     }
 
+    public function get($key, $default = null)
+    {
+        // 如果和set一样用切片的话，则空数组和不存在的值都会返回空数组，无法区分
+        $keys = explode('.', $key);
+        $tmpData = $this->data;
+        foreach ($keys as $key2) {
+            if (!isset($tmpData[$key2])) {
+                return $default;
+            }
+
+            $tmpData = $tmpData[$key2];
+        }
+
+        return $tmpData;
+    }
+
     public function set($key, $value)
     {
-        $this->modify(function ($tmpData) use ($key, $value) {
+        // 先删除，再设置
+        $this->remove($key);
+        $this->aspect(function ($tmpData) use ($key, $value) {
             $tmpData[$key] = $value;
 
             return $tmpData;
@@ -53,8 +68,15 @@ class Config
 
     public function remove($key)
     {
-        $this->modify(function ($tmpData) use ($key) {
-            unset($tmpData[$key]);
+        $this->aspect(function ($tmpData) use ($key) {
+            // 删除其自身及子属性
+            foreach ($tmpData as $k => $v) {
+                if (strpos($k, $key) === 0) {
+                    unset($tmpData[$k]);
+                }
+            }
+
+            return $tmpData;
         });
     }
 }

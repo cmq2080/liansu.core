@@ -154,7 +154,7 @@ class App
             }
 
             if (!$find) {
-                throw new \Exception('Runner Not Found');
+                throw new \Exception('Runner Not Found: ' . $runner);
             }
 
             $driver = new $this->runner(); // 其实是new {$this->runner}();
