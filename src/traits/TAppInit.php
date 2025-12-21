@@ -3,6 +3,7 @@
 namespace liansu\traits;
 
 use liansu\interfaces\IRun;
+use liansu\interfaces\ISortableRun;
 
 trait TAppInit
 {
@@ -46,58 +47,68 @@ trait TAppInit
 
     protected function autoloadInits()
     {
-        $appInits = $this->inits;
-        $this->inits = [];
-
         $groupDir = VENDOR_DIRECTORY . '/liansu';
-        $initMapping = [];
-        foreach (scandir($groupDir) as $module) {
-            if ($module === '.' || $module === '..') {
-                continue;
-            }
-            // 扫描每个模块的init目录，找出init类文件
-            $initDir = $groupDir . '/' . $module . '/src/init';
-            if (!is_dir($initDir)) {
-                continue;
-            }
+        $initArray = [];
 
-            foreach (scandir($initDir) as $name) {
-                if ($name === '.' || $name === '..') {
+        $initCache = sys_cache(2, 'inits'); // 从系统缓存中获取
+        if ($initCache === false) { // 没有缓存则扫目录
+            foreach (scandir($groupDir) as $module) {
+                if ($module === '.' || $module === '..') {
+                    continue;
+                }
+                // 扫描每个模块的init目录，找出init类文件
+                $initDir = $groupDir . '/' . $module . '/src/init';
+                if (!is_dir($initDir)) {
                     continue;
                 }
 
-                $filename = pathinfo($initDir . '/' . $name, PATHINFO_FILENAME);
-                $initClassName = '\\liansu\\init\\' . $filename;
-                if (!class_exists($initClassName)) {
-                    continue;
+                foreach (scandir($initDir) as $name) {
+                    if ($name === '.' || $name === '..') {
+                        continue;
+                    }
+
+                    $filename = pathinfo($initDir . '/' . $name, PATHINFO_FILENAME);
+                    $initClassName = '\\liansu\\init\\' . $filename;
+                    if (!class_exists($initClassName)) {
+                        continue;
+                    }
+
+                    $object = new $initClassName();
+                    if (!($object instanceof IRun)) {
+                        continue;
+                    }
+
+                    $sort = 1 << 30; // 默认为2的30次方
+                    if ($object instanceof ISortableRun) {
+                        if ($object->getSort() < 0 || $object->getSort() > ((1 << 31) - 1)) {
+                            throw new \Exception('Invalid Sort Value: ' . $initClassName . '.(Range: 0 ~ 2^31-1)');
+                        }
+                        $sort = $object->getSort();
+                    }
+
+                    $initArray[] = ['module' => $module, 'class_name' => $initClassName, 'sort' => $sort];
                 }
+            }
 
-                if (!(new $initClassName() instanceof IRun)) {
-                    continue;
+            // 按顺序排序，sort越小越靠前
+            for ($i = 0; $i < count($initArray); $i++) {
+                for ($j = count($initArray) - 1; $j > $i; $j--) {
+                    if ($initArray[$i] > $initArray[$j]) {
+                        $tmp = $initArray[$i];
+                        $initArray[$i] = $initArray[$j];
+                        $initArray[$j] = $tmp;
+                    }
                 }
-
-                $initMapping[$module][] = $initClassName;
             }
+
+            // 存入临时文件
+            sys_cache(1, 'inits', json_encode($initArray));
+        } else { // 有缓存则直接传数组
+            $initArray = json_decode($initCache, true) ?: [];
         }
 
-        // 按优先级加载
-        // core > core_plus > api
-        foreach (['core', 'core_plus', 'api', 'framework'] as $module) {
-            if (empty($initMapping[$module])) {
-                continue;
-            }
-            $this->init(...$initMapping[$module]);
-            unset($initMapping[$module]);
-        }
-
-        foreach ($initMapping as $module => $inits) {
-            $this->init(...$inits);
-            unset($initMapping[$module]);
-        }
-
-        // 加载应用初始化组件（这个级别最低）
-        foreach ($appInits as $init) {
-            $this->init($init);
+        foreach ($initArray as $init) {
+            $this->init($init['class_name']);
         }
     }
 
